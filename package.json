@@ -10,7 +10,7 @@
     "web3": "^1.6.0"
   },
   "scripts": {
-    "build": "tsc -p .",
+    "build": "rm -rf dist; tsc -p .",
     "start": "node ./dist/monitor.js"
   }
 }
