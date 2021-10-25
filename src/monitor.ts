@@ -20,8 +20,10 @@ if ( !discordToken ) {
 const { MessageEmbed, WebhookClient, Client, Intents } = require("discord.js");
 //const webhook = new WebhookClient({ id: '', token: discordToken}); 
 const client = new Client({ intents: [Intents.FLAGS.GUILD_MESSAGES] });
+let channel:any;
 client.once('ready', async () => {
     log("starting web3");
+    channel = client.channels.fetch('901411350696308759');
     start();
 });
 client.login(discordToken);
@@ -38,9 +40,6 @@ function postWizard(name:string, image:string) {
     .setColor('#0099ff');
 
     // TODO: must get it from the configuration
-    console.log(client.channels.cache);
-    const channel = client.channels.cache.get('901411350696308759');
-
     if(channel) {
         channel.send({
            embeds: [embed],
