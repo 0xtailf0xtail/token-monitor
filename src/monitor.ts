@@ -3,12 +3,50 @@
 import  { abi, address } from './contract'
 
 const Web3 = require("web3");
+const got = require("got"); 
 
 // Load project key of Infura
-const infuraKey = process.env.INFURA_KEY
+const infuraKey = process.env.INFURA_KEY;
 if( !infuraKey ) {
-    console.log("Please specify the environment varilable INFURA_KEY");
+    log("Please specify the environment varilable INFURA_KEY");
     process.exit(1);
+}
+
+const discordToken = process.env.DISCORD_TOKEN;
+if ( !discordToken ) {
+    log("Please specify the environment varilable DISCORD_TOKEN");
+    process.exit(1);
+}
+const { MessageEmbed, WebhookClient, Client, Intents } = require("discord.js");
+//const webhook = new WebhookClient({ id: '', token: discordToken}); 
+const client = new Client({ intents: [Intents.FLAGS.GUILD_MESSAGES] });
+client.once('ready', async () => {
+    log("starting web3");
+    start();
+});
+client.login(discordToken);
+
+function postWizard(name:string, image:string) {
+    const embed = new MessageEmbed()
+    .setTitle("Wizard has been burned!")
+    .setImage(image)
+    .setThumbnail(image)
+    .addFields(
+        { name: "Burned Wizard", value: name },
+        { name: "Appeared Soul", value: name},
+    )
+    .setColor('#0099ff');
+
+    // TODO: must get it from the configuration
+    const channel = client.channels.cache.get('901411350696308759');
+
+    if(channel) {
+        channel.send({
+           embeds: [embed],
+        });
+    } else {
+        console.log("failed to get channel object");
+    }
 }
 
 function start() {
@@ -21,33 +59,58 @@ function start() {
     // Monitor new events
     contract.events.Transfer({ fromBlock: "latest" })
     .on("connected", (subscriptionId:any) => {
-        console.log("connected");
-        console.log(subscriptionId);
+        log("connected");
+        log(subscriptionId);
     })
     .on("data", (event:any) => {
-        console.log("data");
+        log("data");
         const tokenId = event.returnValues.tokenId;
         const prevOwner = event.returnValues.from;
         const newOwner = event.returnValues.to;
-        console.log("Token ID " + tokenId + " has been transfered from " + prevOwner + " to " + newOwner);
+        log("Token ID " + tokenId + " has been transfered from " + prevOwner + " to " + newOwner);
+        getTokenInfo(contract, tokenId).then(result => {
+            console.log(result);
+            log(result.name);
+            log(getIpfsGwUrl(result.image));
+            postWizard(result.name, getIpfsGwUrl(result.image))
+        });
     })
     .on("changed", (event:any) => {
-        console.log("changed");
+        log("changed");
         // remove event from local database
     })
     .on("error", (error:any, receipt:any) => {
         // If the transaction was rejected by the network with a receipt, the second parameter will be the receipt.
-        console.log("error");
+        log("error");
         console.log(error, receipt);
-        console.log("restarting web3");
+        log("restarting web3");
         start();
     })
     .on("end", () => {
-        console.log("end");
-        console.log("restarting web3");
+        log("end");
+        log("restarting web3");
         start();
     });
 }
 
-console.log("starting web3");
-start();
+async function getTokenInfo(contract:any, tokenId:number) {
+    const tokenURI = await contract.methods.tokenURI(tokenId).call();
+    log(tokenURI);
+
+    return await getInfoFromIpfs(tokenURI);
+}
+
+async function getInfoFromIpfs(url:string) {
+    const ipfsGwUrl = getIpfsGwUrl(url);
+    const response = await got(ipfsGwUrl).json();
+    return response;
+}
+
+function getIpfsGwUrl(url:string): string {
+    return url.replace("ipfs://", "https://ipfs.io/ipfs/");
+}
+
+function log(log:string) {
+    var datetime = new Date();
+    console.log(datetime.toISOString() + ":" + log);    
+}
