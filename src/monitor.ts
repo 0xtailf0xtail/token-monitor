@@ -23,7 +23,8 @@ const client = new Client({ intents: [Intents.FLAGS.GUILD_MESSAGES] });
 let channel:any;
 client.once('ready', async () => {
     log("starting web3");
-    channel = client.channels.fetch('901411350696308759');
+    channel = await client.channels.fetch('901411350696308759');
+    channel.send("hello");
     start();
 });
 client.login(discordToken);
