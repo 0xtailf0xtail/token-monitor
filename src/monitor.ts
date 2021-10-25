@@ -38,6 +38,7 @@ function postWizard(name:string, image:string) {
     .setColor('#0099ff');
 
     // TODO: must get it from the configuration
+    console.log(client.channels.cache);
     const channel = client.channels.cache.get('901411350696308759');
 
     if(channel) {
