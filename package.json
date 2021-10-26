@@ -13,6 +13,6 @@
   },
   "scripts": {
     "build": "rm -rf dist; tsc -p .",
-    "start": "node ./dist/monitor.js"
+    "start": "node ./dist/bot.js"
   }
 }
