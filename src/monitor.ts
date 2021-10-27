@@ -1,48 +1,78 @@
-import { address, startBlock } from './config';
+import { getInfoFromIpfs, log } from './utils'
+import { startBlock, wizardTokenUrlBase } from './config';
 
 // Load contract information
 import { abi } from './contracts/souls';
 import { infuraEndpoint } from './config';
-import { log } from './utils'
 
 const Web3 = require("web3");
 
-export function start(infuraKey:string, eventCallBack:(wizardTokenId:number, soulTokenId:number) => void) {
-    log("starting web3");
+export class GreatBurningMonitor {
+    infuraKey: string;
+    abi: string;
+    address: string;
+    contract: any;
 
-    // Initialize web3
-    let provider = new Web3.providers.WebsocketProvider(infuraEndpoint + infuraKey)
-    let web3 = new Web3(provider);
+    constructor(infuraKey:string, abi:any, address:string) {
+        this.infuraKey = infuraKey;
+        this.abi = abi;
+        this.address = address;
+    }
 
-    const contract = new web3.eth.Contract(abi, address);
+    initialize() {
+        const provider = new Web3.providers.WebsocketProvider(infuraEndpoint + this.infuraKey);
+        const web3 = new Web3(provider);
+    
+        this.contract = new web3.eth.Contract(this.abi, this.address);
+    }
 
-    // Monitor new events
-    contract.events.SoulBurned({ fromBlock: startBlock })
-    .on("connected", (subscriptionId:any) => {
-        log("connected: " + subscriptionId);
-    })
-    .on("data", (event:any) => {
-        log("data");     
-        const wizardId = event.returnValues.tokenId; // wizard ID
-        const souldId = event.returnValues.soulId; // sould ID
-        log("Wizard ID " + wizardId + " has been burned and Sould ID " + souldId + " has been minted");
+    async getTokenInfo(tokenId:number) {
+        const tokenURI = await this.contract.methods.tokenURI(tokenId).call();
+        log(tokenURI);
+    
+        return await getInfoFromIpfs(tokenURI);
+    }
 
-        eventCallBack(wizardId, souldId);
-    })
-    .on("changed", (event:any) => {
-        log("changed");
-        // remove event from local database
-    })
-    .on("error", (error:any, receipt:any) => {
-        // If the transaction was rejected by the network with a receipt, the second parameter will be the receipt.
-        log("error");
-        console.log(error, receipt);
-        log("restarting web3");
-        start(infuraKey, eventCallBack);
-    })
-    .on("end", () => {
-        log("end");
-        log("restarting web3");
-        start(infuraKey, eventCallBack);
-    });
+    async start(eventCallBack:(wizardTokenId:number, soulTokenId:number) => void) {
+        log("starting web3");
+        this.initialize()
+
+        // Monitor new events
+        this.contract.events.SoulBurned({ fromBlock: startBlock })
+        .on("connected", async (subscriptionId:any) => {
+            log("connected: " + subscriptionId);
+        })
+        .on("data", async (event:any) => {
+            const wizardId = event.returnValues.tokenId; // wizard ID
+            const soulId = event.returnValues.soulId; // sould ID
+            log("Wizard ID " + wizardId + " has been burned and Sould ID " + soulId + " has been minted");
+
+            let soulInfo:any;
+            try {
+                soulInfo = await this.getTokenInfo(soulId);
+            } catch {
+                // well let's use the placeholder for now
+                soulInfo = {"name": "Unknow soul", "image":"https://via.placeholder.com/400"};
+            }
+            console.log(soulInfo);
+    
+            // since wizard is burned, we can't get the metadata url from tokenURI
+            // But ipfs should still have it 
+            const wizardInfo = await getInfoFromIpfs(wizardTokenUrlBase + wizardId);
+
+            eventCallBack(wizardInfo, soulInfo);
+        })
+        .on("error", async (error:any, receipt:any) => {
+            // If the transaction was rejected by the network with a receipt, the second parameter will be the receipt.
+            log("error");
+            console.log(error, receipt);
+            log("restarting web3");
+            this.start(eventCallBack);
+        })
+        .on("end", async () => {
+            log("end");
+            log("restarting web3");
+            this.start(eventCallBack);
+        });
+    }   
 }

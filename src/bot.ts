@@ -1,9 +1,8 @@
-import { address, discordChannelId, wizardTokenUrlBase } from './config';
-import { getInfoFromIpfs, log } from './utils';
+import { address, discordChannelId, } from './config';
 
-import { Erc721Handler } from './erc721';
+import { GreatBurningMonitor } from './monitor';
 import { abi } from './contracts/souls'
-import { start } from './monitor';
+import { log } from './utils';
 
 const { MessageEmbed, Client, Intents } = require("discord.js");
 
@@ -23,49 +22,32 @@ if ( !discordToken ) {
 
 //const webhook = new WebhookClient({ id: '', token: discordToken}); 
 const client = new Client({ intents: [Intents.FLAGS.GUILD_MESSAGES] });
+
 client.once('ready', async () => {
     const channel = await client.channels.fetch(discordChannelId);
+    log("discord bot is ready");
+    if(!channel) {
+        console.log("failed to get channel object");
+        process.exit(1);
+    }
+    let monitor = new GreatBurningMonitor(infuraKey, abi, address);
 
-    let soul = new Erc721Handler(infuraKey, abi, address);
-
-    start(infuraKey, async (wizardId:number, soulId:number) => {
-        let soulInfo:any;
-        try {
-            soulInfo = await soul.getTokenInfo(soulId);
-        } catch {
-            // well let's use the placeholder for now
-            soulInfo = {"name": "Unknow soul", "image":"https://via.placeholder.com/400"};
-        }
-        console.log(soulInfo);
-        log(soulInfo.name);
-        log(soulInfo.image);
-
-        // since wizard is burned, we can't get the metadata url from tokenURI
-        // But ipfs should still have it 
-        const wizardInfo = await getInfoFromIpfs(wizardTokenUrlBase + wizardId);
-
-        postWizard(channel, wizardInfo, soulInfo)
+    monitor.start(async (wizardInfo:any, soulInfo:any) => {
+        const embed = new MessageEmbed()
+        .setTitle("Wizard has been burned!")
+        .setImage(soulInfo.image)
+        .setThumbnail(wizardInfo.image)
+        .addFields(
+            { name: "Burned Wizard", value: wizardInfo.name },
+            { name: "Appeared Soul", value: soulInfo.name},
+        )
+        .setColor('#0099ff');
+    
+        channel.send({
+            embeds: [embed],
+        });
     });
 });
+
 client.login(discordToken);
 
-function postWizard(channel:any, wizardInfo:any, soulInfo:any) {
-    const embed = new MessageEmbed()
-    .setTitle("Wizard has been burned!")
-    .setImage(soulInfo.image)
-    .setThumbnail(wizardInfo.image)
-    .addFields(
-        { name: "Burned Wizard", value: wizardInfo.name },
-        { name: "Appeared Soul", value: soulInfo.name},
-    )
-    .setColor('#0099ff');
-
-    // TODO: must get it from the configuration
-    if(channel) {
-        channel.send({
-           embeds: [embed],
-        });
-    } else {
-        console.log("failed to get channel object");
-    }
-}
