@@ -1,34 +1,80 @@
+import { getInfoFromIpfs, log } from './utils'
+import { startBlock, wizardTokenUrlBase } from './config';
+
 // Load contract information
-// This script should support any ERC-721 token
-import  { abi, address } from './contract'
+import { abi } from './contracts/souls';
+import { infuraEndpoint } from './config';
 
 const Web3 = require("web3");
 
-// Load project key of Infura
-const infuraKey = process.env.INFURA_KEY
-if( !infuraKey ) {
-    console.log("Please specify the environment varilable INFURA_KEY");
-    process.exit(1);
-}
+export class GreatBurningMonitor {
+    infuraKey: string;
+    abi: string;
+    address: string;
+    contract: any;
 
-// Initialize 
-let web3 = new Web3(
-  new Web3.providers.WebsocketProvider("wss://mainnet.infura.io/ws/v3/" + infuraKey)
-);
-
-const contract = new web3.eth.Contract(abi, address);
-
-// Monitor new events
-contract.events.Transfer(
-    { fromBlock: "latest" },
-    (errors:any, events:any) => {
-        if (!errors) {
-            for(const transfer of events ) {
-                const tokenId = transfer.returnValues.tokenId;
-                const prevOwner = transfer.returnValues.from;
-                const newOwner = transfer.returnValues.to;
-                console.log("Token ID " + tokenId + " has been transfered from " + prevOwner + " to " + newOwner);
-            }
-        }
+    constructor(infuraKey:string, abi:any, address:string) {
+        this.infuraKey = infuraKey;
+        this.abi = abi;
+        this.address = address;
     }
-);
+
+    initialize() {
+        const provider = new Web3.providers.WebsocketProvider(infuraEndpoint + this.infuraKey);
+        const web3 = new Web3(provider);
+    
+        this.contract = new web3.eth.Contract(this.abi, this.address);
+    }
+
+    async getTokenInfo(tokenId:number) {
+        const tokenURI = await this.contract.methods.tokenURI(tokenId).call();
+        log(tokenURI);
+    
+        return await getInfoFromIpfs(tokenURI);
+    }
+
+    async start(eventCallBack:(wizardTokenId:number, soulTokenId:number) => void) {
+        log("starting web3");
+        this.initialize()
+
+        // Monitor new events
+        this.contract.events.SoulBurned({ fromBlock: startBlock })
+        .on("connected", async (subscriptionId:any) => {
+            log("connected: " + subscriptionId);
+        })
+        .on("data", async (event:any) => {
+            const wizardId = event.returnValues.tokenId; // wizard ID
+            const soulId = event.returnValues.soulId; // sould ID
+            log("Wizard ID " + wizardId + " has been burned and Sould ID " + soulId + " has been minted");
+
+            let soulInfo:any;
+            try {
+                soulInfo = await this.getTokenInfo(soulId);
+            } catch {
+                // well let's use the placeholder for now
+                soulInfo = {"name": "Unknow soul", "image":"https://via.placeholder.com/400"};
+            }
+            soulInfo.id = soulId;
+            console.log(soulInfo);
+    
+            // since wizard is burned, we can't get the metadata url from tokenURI
+            // But ipfs should still have it 
+            let wizardInfo = await getInfoFromIpfs(wizardTokenUrlBase + wizardId);
+            wizardInfo.id = wizardId;
+
+            eventCallBack(wizardInfo, soulInfo);
+        })
+        .on("error", async (error:any, receipt:any) => {
+            // If the transaction was rejected by the network with a receipt, the second parameter will be the receipt.
+            log("error");
+            console.log(error, receipt);
+            log("restarting web3");
+            this.start(eventCallBack);
+        })
+        .on("end", async () => {
+            log("end");
+            log("restarting web3");
+            this.start(eventCallBack);
+        });
+    }   
+}
