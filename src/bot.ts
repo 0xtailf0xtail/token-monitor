@@ -38,7 +38,7 @@ client.once('ready', async () => {
         .setImage(soulInfo.image)
         .setThumbnail(wizardInfo.image)
         .addFields(
-            { name: "Burned Wizard", value: wizardInfo.name },
+            { name: "Burned Wizard", value: "[" + wizardInfo.name + "](https://www.forgottenrunes.com/lore/wizards/" + wizardInfo.id + "/0)" },
             { name: "Appeared Soul", value: soulInfo.name},
         )
         .setColor('#0099ff');

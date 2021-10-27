@@ -54,11 +54,13 @@ export class GreatBurningMonitor {
                 // well let's use the placeholder for now
                 soulInfo = {"name": "Unknow soul", "image":"https://via.placeholder.com/400"};
             }
+            soulInfo.id = soulId;
             console.log(soulInfo);
     
             // since wizard is burned, we can't get the metadata url from tokenURI
             // But ipfs should still have it 
-            const wizardInfo = await getInfoFromIpfs(wizardTokenUrlBase + wizardId);
+            let wizardInfo = await getInfoFromIpfs(wizardTokenUrlBase + wizardId);
+            wizardInfo.id = wizardId;
 
             eventCallBack(wizardInfo, soulInfo);
         })
