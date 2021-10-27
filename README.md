@@ -33,5 +33,5 @@ INFURA_KEY=<project key> DISCORD_TOKEN=<token> yarn start
 
 ```
 docker build . -t token-monitor:latest
-docker run --rm -it -e INFURA_KEY=<project key> DISCORD_TOKEN=<token> token-monitor
+docker run --rm -it -e INFURA_KEY=<project key> -e DISCORD_TOKEN=<token> token-monitor
 ```
