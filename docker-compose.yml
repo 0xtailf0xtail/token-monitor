@@ -1,0 +1,12 @@
+version: '3'
+services:
+  monitor:
+    image: ${IMAGE}:${TAG:-latest}
+    environment:
+      INFURA_KEY: ${INFURA_KEY}
+      DISCORD_TOKEN: ${DISCORD_TOKEN}
+    volumes:
+      - type: bind
+        source: "./config.js"
+        target: "/token-monitor/dist/config.js"
+    restart: always
