@@ -4,7 +4,8 @@ services:
     image: ${IMAGE}:${TAG:-latest}
     environment:
       INFURA_KEY: ${INFURA_KEY}
-      DISCORD_TOKEN: ${DISCORD_TOKEN}
+      DISCORD_TOKEN: ${DISCORD_TOKEN:-}
+      DISCORD_WEBHOOK: ${DISCORD_WEBHOOK:-}
     volumes:
       - type: bind
         source: "./config.js"
