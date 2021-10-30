@@ -1,10 +1,8 @@
-import { address, discordChannelId, } from './config';
+import { address, discordChannelId, useWebhook } from './config';
 
 import { GreatBurningMonitor } from './monitor';
 import { abi } from './contracts/souls'
 import { log } from './utils';
-
-const { MessageEmbed, Client, Intents } = require("discord.js");
 
 // Load project key of Infura
 const infuraKey = process.env.INFURA_KEY;
@@ -14,22 +12,41 @@ if( !infuraKey ) {
 }
 
 // Initialize discord client
-const discordToken = process.env.DISCORD_TOKEN;
-if ( !discordToken ) {
-    log("Please specify the environment varilable DISCORD_TOKEN");
-    process.exit(1);
-}
+const { MessageEmbed, Client, Intents, WebhookClient } = require("discord.js");
 
-//const webhook = new WebhookClient({ id: '', token: discordToken}); 
-const client = new Client({ intents: [Intents.FLAGS.GUILD_MESSAGES] });
-
-client.once('ready', async () => {
-    const channel = await client.channels.fetch(discordChannelId);
-    log("discord bot is ready");
-    if(!channel) {
-        console.log("failed to get channel object");
+if(useWebhook) {
+    const discordWebhook = process.env.DISCORD_WEBHOOK;
+    if ( !discordWebhook ) {
+        log("Please specify the environment varilable DISCORD_WEBHOOK");
         process.exit(1);
     }
+
+    const webhookClient = new WebhookClient({ url: discordWebhook });
+    startMonitoring(infuraKey, abi, address, webhookClient);
+} else {
+    const discordToken = process.env.DISCORD_TOKEN;
+    if ( !discordToken ) {
+        log("Please specify the environment varilable DISCORD_TOKEN");
+        process.exit(1);
+    }
+    const client = new Client({ intents: [Intents.FLAGS.GUILD_MESSAGES] });
+
+    client.once('ready', async () => {
+        const channel = await client.channels.fetch(discordChannelId);
+        log("discord bot is ready");
+        if(!channel) {
+            console.log("failed to get channel object");
+            process.exit(1);
+        }
+
+        startMonitoring(infuraKey, abi, address, channel);
+
+    });
+
+    client.login(discordToken);
+}
+
+function startMonitoring(infuraKey: string, abi:any, address:string, channel: any) {
     let monitor = new GreatBurningMonitor(infuraKey, abi, address);
 
     monitor.start(async (wizardInfo:any, soulInfo:any) => {
@@ -47,7 +64,4 @@ client.once('ready', async () => {
             embeds: [embed],
         });
     });
-});
-
-client.login(discordToken);
-
+}
