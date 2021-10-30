@@ -16,5 +16,5 @@ export async function getInfoFromIpfs(url:string) {
 }
 
 function getIpfsGwUrl(url:string): string {
-    return url.replace("ipfs://", "https://ipfs.io/ipfs/");
+    return url.replace("ipfs://", "https://cloudflare-ipfs.com/ipfs/");
 }
