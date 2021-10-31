@@ -48,14 +48,14 @@ export class GreatBurningMonitor {
             log("Wizard ID " + wizardId + " has been burned and Sould ID " + soulId + " has been minted");
 
             let soulInfo:any = "";
-            for(let retryCount = 0; retryCount < 5; retryCount++) {
+            for(let retryCount = 0; retryCount < 10; retryCount++) {
                 try {
                     soulInfo = await this.getTokenInfo(soulId);
                     if(soulInfo != "") {
                         break;
                     }
                 } catch {
-                    console.log("metadata of " + soulId + " isn't available yet. Retry " + retryCount);
+                    console.log("metadata of soulId " + soulId + " isn't available yet. Retry " + retryCount);
                     // retry after 500ms wait
                     await new Promise(f => setTimeout(f, 500));
                     continue;
