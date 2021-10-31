@@ -47,13 +47,25 @@ export class GreatBurningMonitor {
             const soulId = event.returnValues.soulId; // sould ID
             log("Wizard ID " + wizardId + " has been burned and Sould ID " + soulId + " has been minted");
 
-            let soulInfo:any;
-            try {
-                soulInfo = await this.getTokenInfo(soulId);
-            } catch {
+            let soulInfo:any = "";
+            for(let retryCount = 0; retryCount < 5; retryCount++) {
+                try {
+                    soulInfo = await this.getTokenInfo(soulId);
+                    if(soulInfo != "") {
+                        break;
+                    }
+                } catch {
+                    console.log("metadata of " + soulId + " isn't available yet. Retry " + retryCount);
+                    // retry after 500ms wait
+                    await new Promise(f => setTimeout(f, 500));
+                    continue;
+                }
+            }
+            if(soulInfo == "") {
                 // well let's use the placeholder for now
                 soulInfo = {"name": "Unknow soul", "image":"https://via.placeholder.com/400"};
             }
+
             soulInfo.id = soulId;
             console.log(soulInfo);
     
