@@ -56,7 +56,7 @@ function startMonitoring(infuraKey: string, abi:any, address:string, channel: an
         .setThumbnail(wizardInfo.image)
         .addFields(
             { name: "Burned Wizard", value: "[" + wizardInfo.name + "](https://www.forgottenrunes.com/lore/wizards/" + wizardInfo.id + "/0)" },
-            { name: "Appeared Soul", value: soulInfo.name},
+            { name: "Appeared Soul", value: "[" + soulInfo.name + "](https://opensea.io/assets/" + address + "/" + soulInfo.id + ")" },
         )
         .setColor('#0099ff');
     

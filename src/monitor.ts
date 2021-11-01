@@ -64,7 +64,7 @@ export class GreatBurningMonitor {
             }
             if(soulInfo == "") {
                 // well let's use the placeholder for now
-                soulInfo = {"name": "Unknow soul", "image":"https://via.placeholder.com/400"};
+                soulInfo = {"name": "-- Failed to retrieve the metadata: " + soulId + "--"};
             }
 
             soulInfo.id = soulId;
