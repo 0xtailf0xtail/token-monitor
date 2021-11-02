@@ -1,8 +1,8 @@
 import { address, discordChannelId, useWebhook } from './config';
+import { getOpenSeaLink, log } from './utils';
 
 import { GreatBurningMonitor } from './monitor';
 import { abi } from './contracts/souls'
-import { log } from './utils';
 import { tweetBurnResult } from './twitter';
 
 // Load project key of Infura
@@ -57,7 +57,7 @@ function startMonitoring(infuraKey: string, abi:any, address:string, channel: an
         .setThumbnail(wizardInfo.image)
         .addFields(
             { name: "Burned Wizard", value: "[" + wizardInfo.name + "](https://www.forgottenrunes.com/lore/wizards/" + wizardInfo.id + "/0)" },
-            { name: "Appeared Soul", value: "[" + soulInfo.name + "](https://opensea.io/assets/" + address + "/" + soulInfo.id + ")" },
+            { name: "Appeared Soul", value: "[" + soulInfo.name + "](" + getOpenSeaLink(soulInfo.id) + ")" },
         )
         .setColor('#0099ff');
     

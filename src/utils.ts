@@ -1,3 +1,5 @@
+import { address } from './config';
+
 const got = require("got"); 
 
 export function log(log:string) {
@@ -22,4 +24,8 @@ function getIpfsGwUrl(url:string): string {
 export async function downloadImageBase64(url:string) {
     const response = await got(url).buffer();
     return response.toString('base64');
+}
+
+export function getOpenSeaLink(soulId:number): string {
+    return "https://opensea.io/assets/" + address + "/" + soulId
 }

@@ -1,4 +1,4 @@
-import { downloadImageBase64, log } from "./utils";
+import { downloadImageBase64, getOpenSeaLink, log } from "./utils";
 
 import got from "got/dist/source";
 
@@ -65,7 +65,8 @@ function tweet(wizardInfo:any, soulInfo:any) {
                 T.post('media/upload', {media_data: wizardImage.toString('base64')}, function(error:any, wizardMedia:any, response:any) {
                     if(!error) {
                         var status = {
-                            status: '"' + wizardInfo.name + '" has transmuted into "' + soulInfo.name + '"',
+                            status: '🔥 "' + wizardInfo.name + '" has transmuted into "' + soulInfo.name + '"\n' +
+                             getOpenSeaLink(soulInfo.id),
                             media_ids: [wizardMedia.media_id_string, soulMedia.media_id_string]
                         };
                         T.post('statuses/update', status, function(error:any, tweet:any, response:any) {
