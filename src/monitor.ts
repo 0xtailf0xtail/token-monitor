@@ -57,14 +57,17 @@ export class GreatBurningMonitor {
                 } catch(err) {
                     console.log(err);
                     console.log("metadata of soulId " + soulId + " isn't available yet. Retry " + retryCount);
-                    // retry after 500ms wait
-                    await new Promise(f => setTimeout(f, 500 + Math.floor(Math.random() * 250)));
+                    // retry after 1s + jitter wait
+                    await new Promise(f => setTimeout(f, 1000 + Math.floor(Math.random() * 500)));
                     continue;
                 }
             }
             if(soulInfo == "") {
                 // well let's use the placeholder for now
-                soulInfo = {"name": "-- Failed to retrieve the metadata: " + soulId + "--"};
+                soulInfo = {
+                    name: "-- Failed to retrieve the metadata: " + soulId + "--",
+                    image: "https://via.placeholder.com/400&text=Error"
+                };
             }
 
             soulInfo.id = soulId;

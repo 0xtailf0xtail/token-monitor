@@ -9,6 +9,7 @@
   "dependencies": {
     "discord.js": "^13.2.0",
     "got": "^11.8.2",
+    "twit": "^2.2.11",
     "web3": "^1.6.0"
   },
   "scripts": {

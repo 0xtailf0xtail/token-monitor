@@ -3,6 +3,7 @@ import { address, discordChannelId, useWebhook } from './config';
 import { GreatBurningMonitor } from './monitor';
 import { abi } from './contracts/souls'
 import { log } from './utils';
+import { tweetBurnResult } from './twitter';
 
 // Load project key of Infura
 const infuraKey = process.env.INFURA_KEY;
@@ -63,5 +64,8 @@ function startMonitoring(infuraKey: string, abi:any, address:string, channel: an
         channel.send({
             embeds: [embed],
         });
+
+        // Send the result to Twitter as well
+        tweetBurnResult(wizardInfo, soulInfo);
     });
 }

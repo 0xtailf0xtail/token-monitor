@@ -18,3 +18,8 @@ export async function getInfoFromIpfs(url:string) {
 function getIpfsGwUrl(url:string): string {
     return url.replace("ipfs://", "https://cloudflare-ipfs.com/ipfs/");
 }
+
+export async function downloadImageBase64(url:string) {
+    const response = await got(url).buffer();
+    return response.toString('base64');
+}
