@@ -1,0 +1,18 @@
+version: '3'
+services:
+  backfill:
+    image: ${IMAGE}:backfill
+    command: 'node ./dist/backfill.js'
+    environment:
+      INFURA_KEY: ${INFURA_KEY}
+      TWITTER_TOKEN: ${TWITTER_TOKEN}
+      TWITTER_TOKEN_SECRET: ${TWITTER_TOKEN_SECRET}
+      TWITTER_CONSUMER_KEY: ${TWITTER_CONSUMER_KEY}
+      TWITTER_CONSUMER_SECRET: ${TWITTER_CONSUMER_SECRET}
+    volumes:
+      - type: bind
+        source: "./config.js"
+        target: "/token-monitor/dist/config.js"
+      - type: bind
+        source: "./processedSouls.txt"
+        target: "/token-monitor/data/processedSouls.txt"
