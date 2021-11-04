@@ -1,7 +1,8 @@
 version: '3'
 services:
-  monitor:
+  backfill:
     image: ${IMAGE}:backfill
+    command: 'node ./dist/backfill.js'
     environment:
       INFURA_KEY: ${INFURA_KEY}
       TWITTER_TOKEN: ${TWITTER_TOKEN}
@@ -12,4 +13,6 @@ services:
       - type: bind
         source: "./config.js"
         target: "/token-monitor/dist/config.js"
-    restart: always
+      - type: bind
+        source: "./processedSouls.txt"
+        target: "/token-monitor/data/processedSouls.txt"
