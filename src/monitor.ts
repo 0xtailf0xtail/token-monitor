@@ -33,6 +33,13 @@ export class GreatBurningMonitor {
         return await getInfoFromIpfs(tokenURI);
     }
 
+    async getOwnerOf(tokenId:number) {
+        const owner = await this.contract.methods.ownerOf(tokenId).call();
+        log(owner);
+
+        return owner;
+    }
+
     async start(eventCallBack:(wizardTokenId:number, soulTokenId:number) => void) {
         log("starting web3");
         this.initialize()
@@ -70,7 +77,11 @@ export class GreatBurningMonitor {
                 };
             }
 
+            // Get Owner Info
+            soulInfo.owner = await this.getOwnerOf(soulId);
+
             soulInfo.id = soulId;
+
             console.log(soulInfo);
     
             // since wizard is burned, we can't get the metadata url from tokenURI

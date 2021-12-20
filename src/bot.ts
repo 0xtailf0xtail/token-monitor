@@ -1,5 +1,5 @@
 import { address, discordChannelId, useWebhook } from './config';
-import { getOpenSeaLink, log } from './utils';
+import { getOpenSeaLink, getOpenSeaOwnerLink, log } from './utils';
 
 import { GreatBurningMonitor } from './monitor';
 import { abi } from './contracts/souls'
@@ -58,6 +58,7 @@ function startMonitoring(infuraKey: string, abi:any, address:string, channel: an
         .addFields(
             { name: "Burned Wizard", value: "[" + wizardInfo.name + "](https://www.forgottenrunes.com/lore/wizards/" + wizardInfo.id + "/0)" },
             { name: "Appeared Soul", value: "[" + soulInfo.name + "](" + getOpenSeaLink(soulInfo.id) + ")" },
+            { name: "Owner", value: "[" + soulInfo.owner.substring(0, 8) + "](" + getOpenSeaOwnerLink(soulInfo.owner) + ")" },
         )
         .setColor('#0099ff');
     

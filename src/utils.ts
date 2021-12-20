@@ -29,3 +29,7 @@ export async function downloadImageBase64(url:string) {
 export function getOpenSeaLink(soulId:number): string {
     return "https://opensea.io/assets/" + address + "/" + soulId
 }
+
+export function getOpenSeaOwnerLink(ownerAddress:string): string {
+    return "https://opensea.io/accounts/" + ownerAddress;
+}
